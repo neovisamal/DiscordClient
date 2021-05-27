@@ -1,18 +1,25 @@
-import tokenFinder, launch
+from tokenFinder import findTokens
+from launch import launch
+from bot import Bot
+
+import utils
 import os
 
 import asyncio
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+loop = asyncio.get_event_loop()
 
-import utils
 
-launch.launch()
-
-TOKENS = tokenFinder.findTokens()
+TOKENS = findTokens()
 for token in TOKENS:
-    os.system(f"python bot.py {token}")
-    with open("log.txt") as file:
-        if not file.read().endswith("Invalid token"):
-            break
+    try:
+        Bot = Bot()
+        loop.create_task(Bot.start(token, bot=False))
+    except:
+        pass
 else:
     utils.raiseDialogue("You are not logged into the Discord app or discord.com website")
+
+loop.run_forever()
+
+launch.launch()

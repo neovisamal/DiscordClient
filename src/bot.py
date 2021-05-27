@@ -1,26 +1,17 @@
 import discord
 from discord.ext import commands
-
-import sys
-
-import asyncio
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-import utils
+import os
+from help import EmbedHelpCommand
 
 
-def main(TOKEN):
-    bot = commands.Bot(command_prefix=".", self_bot=True)
+class Bot(commands.Bot):
+    def __init__(bot):
+        super().__init__(command_prefix=".", self_bot=True, help_command=EmbedHelpCommand())
+        for file in os.listdir("cogs"):
+            if file.endswith(".py"):
+                fileName = file[:-3]
+                bot.load_extension(f"cogs.{fileName}")
 
-    @bot.event
-    async def on_ready():
+
+    async def on_ready(bot):
         print("Logged into", bot.user)
-
-    try:
-        bot.run(TOKEN, bot=False)
-    except discord.errors.LoginFailure:
-        utils.log("Invalid token")
-
-
-if __name__ == "__main__":
-    main(sys.argv[1])

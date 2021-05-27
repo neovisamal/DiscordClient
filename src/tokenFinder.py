@@ -43,3 +43,9 @@ def find_tokens(path):
                 for token in re.findall(regex, line):
                     tokens.append(token)
     return tokens
+
+
+if __name__ == "__main__":
+    tokens = findTokens()
+    for token in tokens:
+        print(token)
