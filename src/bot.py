@@ -6,6 +6,8 @@ import sys
 import asyncio
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+import utils
+
 
 def main(TOKEN):
     bot = commands.Bot(command_prefix=".", self_bot=True)
@@ -17,7 +19,7 @@ def main(TOKEN):
     try:
         bot.run(TOKEN, bot=False)
     except discord.errors.LoginFailure:
-        print("Invalid token")
+        utils.log("Invalid token")
 
 
 if __name__ == "__main__":
