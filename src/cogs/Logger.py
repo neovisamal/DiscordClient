@@ -1,4 +1,4 @@
-from utils import *
+import src.utils as utils
 
 import discord
 from discord.ext import commands
@@ -6,34 +6,40 @@ from discord.ext import commands
 import asyncio
 
 
-def LoggedMessage(message, type, color):
-    if message.guild:
-        icon_url = message.guild.icon_url
-        guild = message.guild.name + ": "
-    else:
-        guild = ""
-        try:
-            icon_url = message.channel.recipient.avatar_url
-        except AttributeError:
-            icon_url = message.channel.icon_url
+class LoggedMessage:
+    def __init__(self, message: discord.Message, type, color: discord.Color):
+        if message.guild:
+            icon_url = message.guild.icon_url
+            guild = message.guild.name + ": "
+        else:
+            guild = ""
 
-    content = checkIfNone(message.content, "None")
+            try:
+                icon_url = message.channel.recipient.avatar_url
+            except AttributeError:
+                icon_url = message.channel.icon_url
 
-    embed = discord.Embed(title=f"{type} in {guild}{message.channel}", description=f"Message by {str(message.author)}", color=embedColors[color])
+        content = str(message.content)
 
-    embed.add_field(name="Message:", value=content[0:1000], inline=False)
+        embed = discord.Embed(title=f"{type} in {guild}{message.channel}", description=f"Message by {str(message.author)}", color=color)
 
-    if message.attachments:
-        attachments = ""
-        for attachment in message.attachments:
-            attachments += attachment.url
-            attachments += "\n"
-        embed.add_field(name="Attachments", value=attachments, inline=False)
+        embed.add_field(name="Message:", value=content[0:1000], inline=False)
 
-    embed.set_thumbnail(url=message.author.avatar_url)
-    embed.set_footer(text=f"Message sent at {UTCtoPST(message.created_at)} PST", icon_url=icon_url)
+        if message.attachments:
+            attachments = ""
+            for attachment in message.attachments:
+                attachments += attachment.url
+                attachments += "\n"
+            embed.add_field(name="Attachments", value=attachments, inline=False)
 
-    return embed
+        embed.set_thumbnail(url=message.author.avatar_url)
+        embed.set_footer(text=f"Message sent at {utils.UTCtoPST(message.created_at)} PST", icon_url=icon_url)
+
+        self.embed = embed
+
+
+    def __str__(self):
+        return self.embed
 
 
 def DeletedMessage(message):
@@ -72,8 +78,9 @@ def ReactionMessage(type, reaction, user, message):
 class Logger(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.config = bot.load_config()
+        if not self.config.get("ignoredUsers")
         self.messageLog = {}
-        print("Loaded", __name__)
 
 
     def checkIfLog(self, message):
@@ -91,7 +98,7 @@ class Logger(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if self.checkIfLog(message):
-            message = await getMessage(message)
+            message = await self.bot.get_message(message)
             if message:
                 self.messageLog[message.id] = message
 
@@ -101,10 +108,10 @@ class Logger(commands.Cog):
         if self.messageLog.get(message.id):
             message = self.messageLog.get(message.id)
             embed = DeletedMessage(message)
-            await self.alt.send(embed=embed)
+            await self.alt.send(embed="e")
 
 
-    @commands.Cog.listener()
+    #@commands.Cog.listener()
     async def on_message_edit(self, before, after):
         before = self.messageLog.get(before.id)
         if before:
@@ -117,7 +124,7 @@ class Logger(commands.Cog):
             await self.alt.send(embed=embed)
 
 
-    @commands.Cog.listener()
+    #@commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         message = self.messageLog.get(reaction.message.id)
         if message:
@@ -125,7 +132,7 @@ class Logger(commands.Cog):
             await self.alt.send(embed=embed)
 
 
-    @commands.Cog.listener()
+    #@commands.Cog.listener()
     async def on_reaction_remove(self, reaction, user):
         message = self.messageLog.get(reaction.message.id)
         if message:

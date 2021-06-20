@@ -12,6 +12,7 @@ class EmbedHelpCommand(commands.MinimalHelpCommand):
         destination = self.get_destination()
         embed = discord.Embed(description="")
         embed.set_thumbnail(url=self.context.bot.user.avatar_url)
+        embed.set_author(name="Self-Bot for Discord")
         for page in self.paginator.pages:
             embed.description += page
         await destination.send(embed=embed)

@@ -1,20 +1,60 @@
-import os
-import sys
-import json
+import discord
+from discord.ext import commands
 
 from datetime import datetime
 from dateutil import tz
 
+import json
 
-embedColors = {
-"Red": 0xff0000,
-"Orange": 0xff6600,
-"Yellow": 0xfff700,
-"Green": 0x00ff1e,
-"Blue": 0x002aff,
-"Purple": 0x8000ff,
-"Pink": 0xfb00ff
-}
+
+class Config:
+    def __setattr__(self, name, value):
+        print(name, value)
+        super().__setattr__(name, value)
+        self.save_data()
+
+
+    def __init__(self, **kwargs):
+        self.TOKEN = kwargs.get("TOKEN", None)
+        self.cogs = kwargs.get("cogs", [])
+        self.ignored_words = kwargs.get("ignored_words", [])
+        self.prefix = kwargs.get("prefix", ".")
+        self.alt_ID = kwargs.get("alt_ID", 0)
+        self.ignored_users = kwargs.get("ignored_users", [])
+
+        self.save_data()
+
+
+    @classmethod
+    def from_file(cls, *, path="config.json"):
+        with open(path) as file:
+            config = json.loads(file.read())
+        return cls(**config)
+
+
+    def save_data(self, *, path="config.json"):
+        with open(path, "w+") as file:
+            file.write(json.dumps(self.__dict__))
+
+
+    @staticmethod
+    def config_exists(*, path="config.json"):
+        try:
+            open(path)
+            return True
+        except FileNotFoundError:
+            return False
+
+
+class Color(discord.Color):
+    @classmethod
+    def red(cls):
+        return cls(0xff0000)
+
+
+class Converters:
+    RoleConverter = commands.RoleConverter()
+    MemberConverter = commands.MemberConverter()
 
 
 def checkIfNone(value, default):
@@ -22,25 +62,6 @@ def checkIfNone(value, default):
         return value
     else:
         return default
-
-
-def loadConfig(path):
-    with open(f"{path}/config.json") as file:
-        return json.loads(file.read())
-
-
-def saveData(path, config):
-    with open(f"{path}/config.json", "w+") as file:
-        file.write(json.dumps(config))
-
-
-def openInBrowser(url):
-    browsers = {
-        "win32": "start",
-        "darwin": "open"
-        }
-
-    os.system(f"{browsers[sys.platform]} \"\" {url}")
 
 
 def UTCtoPST(utc_time):
@@ -54,19 +75,8 @@ def UTCtoPST(utc_time):
     return local_time
 
 
-async def getMessage(message):
-    async for m in message.channel.history(limit=25):
-        if message.id == m.id:
-            return m
-
-
 def raiseDialogue(message):
     command = 'PowerShell -Command "Add-Type -AssemblyName PresentationFramework;[System.Windows.MessageBox]::Show('
     command += f"'{message}')"
     command += '"'
     os.system(command)
-
-
-def log(message):
-    with open("log.txt", "w") as file:
-        file.write(f"{datetime.utcnow()}, {message}")

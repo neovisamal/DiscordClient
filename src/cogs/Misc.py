@@ -1,12 +1,18 @@
-from utils import *
-
 import discord
 from discord.ext import commands
 
+import src.utils as utils
+from src.utils import Color, Converters
+
 from PyDictionary import PyDictionary
+PyDictionary = PyDictionary()
+
 from spellchecker import SpellChecker
+SpellChecker = SpellChecker()
+
 from googletrans import Translator
 from googletrans.constants import LANGUAGES
+Translator = Translator()
 
 import datetime
 from datetime import datetime as dtime
@@ -17,56 +23,42 @@ class Misc(commands.Cog):
         self.bot = bot
         self.stopWatches = {}
         self.bot.help_command.cog = self
-        self.passErrors = (commands.CommandNotFound)
-        print("Loaded", __name__)
 
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if not isinstance(error, self.passErrors):
-            try:
-                await ctx.send(f"```{str(error)}```")
-            except Exception as e:
-                print(e, error)
-
-
-    @commands.command(aliases=['ac'], brief="Autocorrects a set number of messages, default is 5", help="Autocorrects a set number of messages, default is 5")
-    async def autocorrect(self, ctx, *limit):
-      if not limit:
-        limit = 5
-      else:
-        limit = limit[0]
-      await ctx.message.delete()
-      async for message in ctx.channel.history(limit=int(limit)):
-        if message.id != ctx.message.id and message.author.id == self.bot.user.id:
-          newMessage = ""
-          for word in message.content.split():
-            if not word in self.config['ignoredWords']:
-              newMessage += SpellChecker().correction(word)
-              newMessage += " "
-          if newMessage:
-            await message.edit(content=newMessage)
+    """@commands.command(aliases=['ac'], brief="Autocorrects a set number of messages, default is 5", help="Autocorrects a set number of messages, default is 5")
+    async def autocorrect(self, ctx):
+        if not ctx.message.reference:
+            raise commands.BadArgument("")"""
 
 
     @commands.command(brief="Stops the autocorrect form correcting a word", help="Stops the autocorrect from correcting a word")
     async def ignoreword(self, ctx, word):
-      self.config['ignoredWords'].append(word)
-      saveData(self.name, self.config)
-      await ctx.send(f"```Autocorrect will no longer correct the word {word}```")
+      self.bot.config.ignored_words = self.bot.config.ignored_words.append(word)
+      await ctx.send(f"```Autocorrect will now ignore the word {word}```")
 
 
     @commands.command(brief="Autocorrect will no longer ignore a word", help="Autocorrect will no longer ignore a word")
     async def unignoreword(self, ctx, word):
-      self.config['ignoredWords'].remove(word)
-      saveData(self.name, self.config)
-      await ctx.send(f"```Autocorrect will now correct the word {word}```")
+      self.bot.config.ignored_words.remove(word)
+      await ctx.send(f"```Autocorrect will no longer ignore the word {word}```")
+
+
+    @commands.command(brief="Shows all words that are ignored by autocorrect", help="Shows all words that are ignored by autocorrect")
+    async def ignoredwords(self, ctx):
+        message = "```Words ignored by autocorrect: \n"
+        for word in self.bot.config.ignored_words:
+            message += word
+            message += "\n"
+        message += "```"
+        await ctx.reply(message)
 
 
     @commands.command(brief="Spams a message", help="Spams a message")
     async def spam(self, ctx, *, message):
     	self.spamming = True
     	while self.spamming:
-    		await ctx.send(message)
+            await ctx.send(message)
+            await asyncio.sleep(1)
 
 
     @commands.command(brief="Stops spamming a message", help="Stops spamming a message")
@@ -92,7 +84,7 @@ class Misc(commands.Cog):
                 member_or_role = await Converters.MemberConverter.convert(ctx, member_or_role)
 
 
-        embed = discord.Embed(title=f"Perms for {str(member_or_role)} in {ctx.guild.name}", color=embedColors["Red"])
+        embed = discord.Embed(title=f"Perms for {str(member_or_role)} in {ctx.guild.name}", color=Color.red())
 
         if type(member_or_role) == discord.Member:
             permissions = member_or_role.guild_permissions
@@ -148,7 +140,7 @@ class Misc(commands.Cog):
         if self.stopWatches.get(ctx.author.id):
             raise commands.BadArgument("Stop watch already in use")
         await ctx.reply("Starting stopwatch")
-        self.stopWatches[ctx.author.id] = dtime.utcnow()
+        self.stopWatches[ctx.author.id] = datetime.utcnow()
 
 
     @commands.command(help="Stops a stopwatch if there is an active one")
@@ -156,23 +148,22 @@ class Misc(commands.Cog):
         startTime = self.stopWatches.get(ctx.author.id)
         if not startTime:
             raise commands.BadArgument("No active stopwatches")
-        seconds = (dtime.utcnow() - startTime).total_seconds()
-        await ctx.reply(f"Ended timer. Timer ran for: {datetime.timedelta(seconds=seconds).strftime('%H:%M:%S %m/%d/%')}")
+        seconds = (datetime.utcnow() - startTime).total_seconds()
+        await ctx.reply(f"Ended timer. Timer ran for: {datetime.timedelta(seconds=seconds)}")
         del self.stopWatches[ctx.author.id]
 
 
-    @commands.command(aliases=['alive'], brief="Checks the ping of the bot", help="Checks the ping of the bot")
+    @commands.command(description="For accurate ping readings, this is ratelimited to 1 use every 5 seconds per guild", help="Checks GamerBot's Ping")
+    @commands.cooldown(1, 60, commands.BucketType.guild)
     async def ping(self, ctx):
-      embed = discord.Embed(title="Self-Bot is alive", description=(f"Ping:"), color=embedColors["Red"])
-      before = await ctx.send(embed=embed)
-      embed = discord.Embed(title="Self-Bot is alive", description=(f"Ping: {(before.created_at - ctx.message.created_at).total_seconds() * 1000}ms"), color=embedColors["Red"])
-      await before.edit(embed=embed)
+        t = await ctx.reply("Pong!")
+        await t.edit(content=f'Pong! `{(t.created_at-ctx.message.created_at).total_seconds() * 1000}ms`')
 
 
     @commands.command(brief="Returns the definition of a word", help="Returns the definition of a word")
     async def define(self, ctx, word):
-        embed = discord.Embed(title=f"Definition of '{word}'", description=None, color=embedColors["Green"])
-        meanings = PyDictionary().meaning(word)
+        embed = discord.Embed(title=f"Definition of '{word}'", color=Color.green())
+        meanings = PyDictionary.meaning(word)
         for item in meanings:
             message = ""
             for meaning in meanings[item]:
@@ -187,7 +178,7 @@ class Misc(commands.Cog):
         def check(m):
             responses = ['y', 'n']
             return ctx.author == m.author and ctx.channel == m.channel and msg.content in responses
-        msg = await bot.wait_for('message', timeout=60.0, check=check)
+        msg = await self.bot.wait_for('message', timeout=60.0, check=check)
         if msg.content == "y":
             for message in await ctx.channel.pins():
                 await message.unpin()
@@ -198,8 +189,8 @@ class Misc(commands.Cog):
 
     @commands.command(brief="Uses Google Translate to translate a message into English", help="Uses Google Translate to translate a message into English")
     async def translate(self, ctx, *, message):
-        embed = discord.Embed(title=f'Translation of "{message}"', color=embedColors["Green"])
-        translation = Translator().translate(message, dest='en')
+        translation = Translator.translate(message, dest='en')
+        embed = discord.Embed(color=Color.green())
         embed.add_field(name=LANGUAGES[translation.src.lower()].capitalize(), value=message, inline=False)
         embed.add_field(name=LANGUAGES[translation.dest].capitalize(), value=translation.text, inline=False)
         await ctx.send(embed=embed)
