@@ -69,15 +69,10 @@ class TokenFinder:
 
 
     def display(self):
-        message = ""
-        if len(self.to_list()) == 0:
-            message += "No tokens found"
-        else:
-            message += f"Found {len(self.to_list())} tokens:"
-            for token in self.tokens:
-                message += "\n"
-                message += f"{token.platform}: {token}"
-
+        message = f"{len(self.to_list())} tokens found:"
+        for token in self.tokens:
+            message += "\n"
+            message += f"{token.platform}: {token.token}"
         return message
 
 
