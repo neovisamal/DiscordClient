@@ -9,7 +9,6 @@ import json
 
 class Config:
     def __setattr__(self, name, value):
-        print(name, value)
         super().__setattr__(name, value)
         self.save_data()
 
@@ -19,10 +18,9 @@ class Config:
         self.cogs = kwargs.get("cogs", [])
         self.ignored_words = kwargs.get("ignored_words", [])
         self.prefix = kwargs.get("prefix", ".")
-        self.alt_ID = kwargs.get("alt_ID", 0)
+        self.log_channel = kwargs.get("log_channel", 0)
         self.ignored_users = kwargs.get("ignored_users", [])
-
-        self.save_data()
+        self.logged_guilds = kwargs.get("logged_guilds", [])
 
 
     @classmethod
