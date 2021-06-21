@@ -3,6 +3,9 @@ from discord.ext import commands
 
 from src.utils import Color, Config
 
+## TODO:
+## Switch load_extension for import cog and add
+
 
 class Bot(commands.Bot):
     def __init__(bot, **kwargs):
