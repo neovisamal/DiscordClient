@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from src.utils import Color, Config
 
+from src.cogs import Setup, Logger, Misc, ErrorHandler
 ## TODO:
 ## Switch load_extension for import cog and add
 
@@ -17,12 +18,12 @@ class Bot(commands.Bot):
             bot.config = Config()
 
         if not bot.config.cogs:
-            bot.load_extension("src.cogs.Setup")
+            bot.add_cog(Setup(bot))
         else:
-            bot.load_extension("src.cogs.ErrorHandler")
+            bot.add_cog(ErrorHandler(bot))
 
             for cog in bot.config.cogs:
-                bot.load_extension(f"src.cogs.{cog}")
+                bot.add_cog(globals()[cog](bot))
 
         bot.add_command(bot.setup)
 
@@ -104,7 +105,7 @@ class Bot(commands.Bot):
         for cog in loaded_cogs:
             bot.unload_extension(f"src.cogs.{cog}")
 
-        bot.load_extension("src.cogs.ErrorHandler")
+        bot.add_cog(ErrorHandler(bot))
 
         for cog in selected_cogs:
             bot.load_extension(f"src.cogs.{cog}")
