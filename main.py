@@ -18,7 +18,11 @@ if args.windows:
 
 
 def new_login():
+<<<<<<< HEAD
     TOKENS = TokenFinder().to_list()
+=======
+    TOKENS = TokenFinder()
+>>>>>>> master
     if not TOKENS:
         utils.raiseDialogue("Could not detect your Discord token! Your token is required to run a Self-Bot.")
         exit()

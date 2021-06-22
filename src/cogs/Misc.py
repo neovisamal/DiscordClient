@@ -43,7 +43,8 @@ class Misc(commands.Cog):
     async def ignoreword(self, ctx, word):
       self.bot.config.ignored_words.append(word)
       self.bot.config.ignored_words = self.bot.config.ignored_words
-      await ctx.send(f"```Autocorrect will now ignore the word {word}```")
+      embed = discord.Embed(title=f"Autocorrect will now ignore the word {word}", color=Color.red())
+      await ctx.reply(embed=embed)
 
 
     @commands.command(brief="Autocorrect will no longer ignore a word", help="Autocorrect will no longer ignore a word")
@@ -53,7 +54,8 @@ class Misc(commands.Cog):
       except ValueError:
           pass
       self.bot.config.ignored_words = self.bot.config.ignored_words
-      await ctx.send(f"```Autocorrect will no longer ignore the word {word}```")
+      embed = discord.Embed(title=f"Autocorrect will no longer ingore the word {word}", color=Color.red())
+      await ctx.reply(embed=embed)
 
 
     @commands.command(brief="Shows all words that are ignored by autocorrect", help="Shows all words that are ignored by autocorrect")
@@ -68,6 +70,9 @@ class Misc(commands.Cog):
 
     @commands.command(brief="Spams a message", help="Spams a message")
     async def spam(self, ctx, *, message):
+        embed = discord.Embed(title=f"To stop spamming, use {self.bot.command_prefix(self.bot, ctx)}stopspam")
+        await ctx.reply(embed=embed)
+        
     	self.spamming = True
     	while self.spamming:
             await ctx.send(message)
