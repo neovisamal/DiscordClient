@@ -5,7 +5,7 @@ from datetime import datetime
 from dateutil import tz
 
 import json
-
+import os
 
 class Config:
     def __setattr__(self, name, value):
@@ -74,7 +74,5 @@ def UTCtoPST(utc_time):
 
 
 def raiseDialogue(message):
-    command = 'PowerShell -Command "Add-Type -AssemblyName PresentationFramework;[System.Windows.MessageBox]::Show('
-    command += f"'{message}')"
-    command += '"'
+    command = f"osascript -e 'tell app " + f'"System Events" to display dialog "{message}"' + "'"
     os.system(command)
