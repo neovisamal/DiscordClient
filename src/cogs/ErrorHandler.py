@@ -90,7 +90,7 @@ class ErrorHandler(commands.Cog):
 
 
         if isinstance(error.original, commands.MissingRequiredArgument):
-            await destination.send_help(ctx.command.name)
+            await ctx.send_help(ctx.command.name)
 
 
 def setup(bot):
