@@ -4,8 +4,6 @@ from discord.ext import commands
 from src.utils import Color, Config
 
 from src.cogs import Setup, Logger, Misc, ErrorHandler
-## TODO:
-## Switch load_extension for import cog and add
 
 
 class Bot(commands.Bot):
