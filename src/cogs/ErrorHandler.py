@@ -28,7 +28,7 @@ class EmbedError(Exception):
     async def send(self, destination):
         try:
             await destination.send(embed=self.get_embed())
-        except discord.HTTPException:
+        except (discord.HTTPException, discord.errors.Forbidden):
             pass
 
 
@@ -49,7 +49,6 @@ class ErrorHandler(commands.Cog):
                 return
 
         error = getattr(error, 'original', error)
-        destination = ctx
 
 
         if isinstance(error, ignored_errors):
@@ -87,7 +86,7 @@ class ErrorHandler(commands.Cog):
 
 
         if isinstance(error, EmbedError):
-            await error.send(destination)
+            await ctx.reply(embed=error.get_embed())
 
 
         if isinstance(error.original, commands.MissingRequiredArgument):
