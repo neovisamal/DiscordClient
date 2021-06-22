@@ -73,8 +73,8 @@ class Misc(commands.Cog):
         embed = discord.Embed(title=f"To stop spamming, use {self.bot.command_prefix(self.bot, ctx)}stopspam")
         await ctx.reply(embed=embed)
 
-        self.spamming = True
-        while self.spamming:
+    	self.spamming = True
+    	while self.spamming:
             await ctx.send(message)
             await asyncio.sleep(1)
 
@@ -182,12 +182,13 @@ class Misc(commands.Cog):
     async def define(self, ctx, word):
         embed = discord.Embed(title=f"Definition of '{word}'", color=Color.green())
         meanings = PyDictionary.meaning(word)
+        print("test")
         for item in meanings:
             message = ""
             for meaning in meanings[item]:
                 message += f"\n{meaning}"
             embed.add_field(name=item, value=message, inline=False)
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
 
 
     @commands.command(brief="Unpins all messages in a channel", help="Unpins all messages in a channel")
