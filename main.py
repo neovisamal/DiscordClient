@@ -34,8 +34,7 @@ def new_login():
         if res != False:
             exit()
     else:
-        print("Invalid token")
-
+        utils.raiseDialogue("Invalid token")
 
 try:
     bot = Bot(command_prefix=Bot.determine_prefix, case_insensitive=True, self_bot=True, help_command=EmbedHelpCommand(), allowed_mentions=discord.AllowedMentions.none(), intents=discord.Intents.all(), debug=args.debug)
