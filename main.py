@@ -11,12 +11,7 @@ import argparse
 parser = argparse.ArgumentParser("Configure your Self-Bot. These are advanced settings intended for people with a knowledge of programming")
 parser.add_argument('TOKEN', nargs="?", default=None)
 parser.add_argument("-d", "--debug", help="Boots the bot into Debug mode, where only the bot Owner can use commands and tracebacks are printed etc", action="store_true")
-parser.add_argument("-w", "--windows", help="Changes the asyncio loop policy to WindowsSelectorEventLoopPolicy", action="store_true")
 args = parser.parse_args()
-
-
-if args.windows:
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 def new_login():
