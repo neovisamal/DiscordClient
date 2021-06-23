@@ -3,7 +3,10 @@ from discord.ext import commands
 
 from src.utils import Color, Config
 
-from src.cogs import Setup, Logger, Misc, ErrorHandler
+from src.cogs.Setup import Setup
+from src.cogs.Misc import Misc
+from src.cogs.Logger import Logger
+from src.cogs.ErrorHandler import ErrorHandler
 
 
 class Bot(commands.Bot):
@@ -93,20 +96,18 @@ class Bot(commands.Bot):
         selected_cogs = [str(reaction) for reaction in reaction.message.reactions]
         selected_cogs.remove("✅")
         selected_cogs = [cogs[cog] for cog in selected_cogs]
+        selected_cogs.append("ErrorHandler")
 
         bot.config.cogs = selected_cogs
 
-        embed = discord.Embed(title="Your Self-Bot is setup! You can always use the setup command to edit which features you would like enabled", color=Color.red())
-        await message.edit(embed=embed)
-
-        loaded_cogs = [cog for cog in bot.cogs if cog != "Setup"]
+        loaded_cogs = [cog for cog in bot.cogs]
         for cog in loaded_cogs:
-            bot.unload_extension(f"src.cogs.{cog}")
-
-        bot.add_cog(ErrorHandler(bot))
+            bot.remove_cog(cog)
 
         for cog in selected_cogs:
-            bot.load_extension(f"src.cogs.{cog}")
+            bot.add_cog(globals()[cog](bot))
 
-        if "Setup" in bot.cogs:
-            bot.unload_extension("src.cogs.Setup")
+
+        await message.clear_reactions()
+        embed = discord.Embed(title="Your Self-Bot is setup! You can always use the setup command to edit which features you would like enabled", color=Color.red())
+        await message.edit(embed=embed)

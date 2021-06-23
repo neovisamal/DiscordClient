@@ -73,8 +73,8 @@ class Misc(commands.Cog):
         embed = discord.Embed(title=f"To stop spamming, use {self.bot.command_prefix(self.bot, ctx)}stopspam")
         await ctx.reply(embed=embed)
 
-    	self.spamming = True
-    	while self.spamming:
+        self.spamming = True
+        while self.spamming:
             await ctx.send(message)
             await asyncio.sleep(1)
 
