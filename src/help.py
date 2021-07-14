@@ -25,4 +25,4 @@ class EmbedHelpCommand(commands.MinimalHelpCommand):
         if getattr(cog, "hidden", False):
             return
 
-        super().send_cog_help(cog)
+        await super().send_cog_help(cog)

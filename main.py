@@ -24,16 +24,18 @@ def new_login():
         utils.raiseDialogue("Could not detect your Discord token! Your token is required to run a Self-Bot.")
         exit()
 
-
-    for token in TOKENS:
-        asyncio.set_event_loop(asyncio.new_event_loop())
-        bot = Bot(command_prefix=Bot.determine_prefix, case_insensitive=True, self_bot=True, help_command=EmbedHelpCommand(), allowed_mentions=discord.AllowedMentions.none(), debug=args.debug)
-        res = bot.run(token, bot=False)
-        if res != False:
-            exit()
-    else:
-        utils.raiseDialogue("Invalid token")
-
+    try:
+        for token in TOKENS:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+            bot = Bot(command_prefix=Bot.determine_prefix, case_insensitive=True, self_bot=True, help_command=EmbedHelpCommand(), allowed_mentions=discord.AllowedMentions.none(), debug=args.debug)
+            res = bot.run(token, bot=False)
+            if res != False:
+                exit()
+        else:
+            utils.raiseDialogue("Invalid token")
+    except RuntimeError:
+        pass
+        
 try:
     bot = Bot(command_prefix=Bot.determine_prefix, case_insensitive=True, self_bot=True, help_command=EmbedHelpCommand(), allowed_mentions=discord.AllowedMentions.none(), intents=discord.Intents.all(), debug=args.debug)
     res = bot.run(bot.config.TOKEN)

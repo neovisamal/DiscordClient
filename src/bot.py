@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+import src.utils as utils
 from src.utils import Color, Config
 
 from src.cogs.Setup import Setup
@@ -109,5 +110,5 @@ class Bot(commands.Bot):
 
 
         await message.clear_reactions()
-        embed = discord.Embed(title="Your Self-Bot is setup! You can always use the setup command to edit which features you would like enabled", color=Color.red())
+        embed = discord.Embed(title="Your Self-Bot is setup! You can always use the setup command to edit which features you would like enabled", description="Remember, if you have not set a logging channel yet, please use the .setlogchannel command to enable Logger", color=Color.red())
         await message.edit(embed=embed)
