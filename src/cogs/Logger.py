@@ -155,7 +155,7 @@ class Logger(commands.Cog):
             raise commands.BadArgument(f"You are not logging {ctx.guild.name}")
         self.bot.config.logged_guilds.remove(ctx.guild.id)
         self.bot.config.logged_guilds = self.bot.config.logged_guilds
-        embed = disord.Embed(title=f"You are no longer logging {ctx.guild.name}", description="Deleted and edited messages will no longer be sent to your logging channel", color=Color.red())
+        embed = discord.Embed(title=f"You are no longer logging {ctx.guild.name}", description="Deleted and edited messages will no longer be sent to your logging channel", color=Color.red())
         await ctx.reply(embed=embed)
 
 
