@@ -1,10 +1,13 @@
 import src.utils as utils
 from src.utils import Color
-
+import json
 import discord
 from discord.ext import commands
-
+import src.ScalyrLogging as scalyr
 import asyncio
+
+
+scalyrlog = scalyr.ScalyrLogger(apiToken='',serverHost='')
 
 
 class LoggedMessage(discord.Embed):
@@ -76,6 +79,7 @@ class Logger(commands.Cog):
         self.log_channel = None
 
 
+
     def checkIfLog(self, message):
         if (not message.author.bot and not message.author.id in self.bot.config.ignored_users) and (not message.guild or message.guild.id in self.bot.config.logged_guilds):
             return True
@@ -93,6 +97,8 @@ class Logger(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.log_channel = self.bot.get_channel(self.bot.config.log_channel)
+        #embed = discord.Embed(title="Logging to Scalyr has been initiated.", color=Color.purple())
+        #await self.log_channel.send(embed=embed)
 
 
     @commands.Cog.listener()
@@ -101,42 +107,86 @@ class Logger(commands.Cog):
             message = await self.bot.get_message(message)
             if message:
                 self.messageLog[message.id] = message
+                newMessage = {}
+                newMessage['message_id'] = str(message.id)
+                newMessage['action'] = "posted"
+                newMessage['channel'] = str(message.channel)
+                newMessage['author'] = str(message.author)
+                newMessage['content'] = str(message.content)
+                newMessage['attachments'] = str(message.attachments)
+                newMessage['guild_name'] = str(message.guild.name)
+                newMessage['guild_id'] = str(message.guild.id)
+                newMessage['guild_member_count'] = str(message.guild.member_count)
+                messageJson = json.dumps(newMessage)
+                scalyrlog.Event(message=messageJson, eventAttributes={"parser":"json"})
+                print(messageJson)
+
 
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
         message = self.messageLog.get(message.id)
         if message and self.log_channel:
-            embed = LoggedMessage.deleted_message(message)
-            await self.log_channel.send(embed=embed)
+            self.messageLog[message.id] = message
+            newMessage = {}
+            newMessage['message_id'] = str(message.id)
+            newMessage['action'] = "posted"
+            newMessage['channel'] = str(message.channel)
+            newMessage['author'] = str(message.author)
+            newMessage['content'] = str(message.content)
+            newMessage['attachments'] = str(message.attachments)
+            newMessage['guild_name'] = str(message.guild.name)
+            newMessage['guild_id'] = str(message.guild.id)
+            newMessage['guild_member_count'] = str(message.guild.member_count)
+            messageJson = json.dumps(newMessage)
+            scalyrlog.Event(message=messageJson, eventAttributes={"parser":"json"})
+            print(messageJson)
 
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
         before = self.messageLog.get(before.id)
         if before:
+            self.messageLog[before.id] = before
+            newMessage = {}
+            newMessage['message_id'] = str(before.id)
+            newMessage['action'] = "edited"
+            newMessage['channel'] = str(before.channel)
+            newMessage['author'] = str(before.author)
+            newMessage['content'] = str(before.content)
+            newMessage['attachments'] = str(before.attachments)
+            newMessage['guild_name'] = str(before.guild.name)
+            newMessage['guild_id'] = str(before.guild.id)
+            newMessage['guild_member_count'] = str(before.guild.member_count)
             after = await self.bot.get_message(after)
             self.messageLog[after.id] = after
-            embed = LoggedMessage.edited_message(before, after)
-            await self.log_channel.send(embed=embed)
+            newMessage['edited_content'] = str(after.content)
+            messageJson = json.dumps(newMessage)
+            scalyrlog.Event(message=messageJson, eventAttributes={"parser":"json"})
+            print(messageJson)
 
+            self.messageLog[after.id] = after
+            print(str(after.content))
 
+#TODO
+#ignoring reactions and bot commands until later. May need to uncomment some of these to setup the bot the first time. 
+'''
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         message = self.messageLog.get(reaction.message.id)
         if message:
             embed = LoggedMessage.reaction_added(reaction, user, message)
             await self.log_channel.send(embed=embed)
-
-
+'''
+'''
     @commands.Cog.listener()
     async def on_reaction_remove(self, reaction, user):
         message = self.messageLog.get(reaction.message.id)
         if message:
             embed = LoggedMessage.reaction_removed(reaction, user, message)
             await self.log_channel.send(embed=embed)
-
-
+'''
+'''
     @commands.command(brief="Logs deleted and edited messages in a server", help="Logs deleted and edited messages in a server")
     @commands.guild_only()
     async def logserver(self, ctx):
@@ -146,8 +196,8 @@ class Logger(commands.Cog):
         self.bot.config.logged_guilds = self.bot.config.logged_guilds
         embed = discord.Embed(title=f"You are now logging {ctx.guild.name}", description="All deleted and edited messages will be sent to your logging channel", color=Color.red())
         await ctx.reply(embed=embed)
-
-
+'''
+'''
     @commands.command(brief="Stops logging deleted and edited messages in a server", help="Stops logging deleted and edited messages in a server")
     @commands.guild_only()
     async def unlogserver(self, ctx):
@@ -155,10 +205,10 @@ class Logger(commands.Cog):
             raise commands.BadArgument(f"You are not logging {ctx.guild.name}")
         self.bot.config.logged_guilds.remove(ctx.guild.id)
         self.bot.config.logged_guilds = self.bot.config.logged_guilds
-        embed = disord.Embed(title=f"You are no longer logging {ctx.guild.name}", description="Deleted and edited messages will no longer be sent to your logging channel", color=Color.red())
+        embed = discord.Embed(title=f"You are no longer logging {ctx.guild.name}", description="Deleted and edited messages will no longer be sent to your logging channel", color=Color.red())
         await ctx.reply(embed=embed)
-
-
+'''
+'''
     @commands.command(brief="Displays a list of all servers being logged", help="Displays a list of all servers being logged")
     async def loggedservers(self, ctx):
         message = ""
@@ -167,8 +217,8 @@ class Logger(commands.Cog):
             message += "\n"
             message += guild.name
         await ctx.reply(f"```Servers currently being logged: {message}```")
-
-
+'''
+'''
     @commands.command(brief="Stops logging a users deleted and edited messages", help="Stops logging a users deleted and edited messages")
     async def ignore(self, ctx, user : discord.User):
         if user.id in self.bot.config.ignored_users:
@@ -177,8 +227,8 @@ class Logger(commands.Cog):
         self.bot.config.ignored_users = self.bot.config.ignored_users
         embed = discord.Embed(title=f"You are now ignoring {str(user)}", description="Deleted and edited messages by this user will no longer be sent to your logging channel", color=Color.red())
         await ctx.reply(embed=embed)
-
-
+'''
+'''
     @commands.command(brief="Starts logging a users deleted and edited messages", help="Starts logging a users deleted and edited messages")
     async def unignore(self, ctx, user : discord.User):
         if not user.id in self.bot.config.ignored_users:
@@ -187,8 +237,8 @@ class Logger(commands.Cog):
         self.bot.config.ignored_users = self.bot.config.ignored_users
         embed = discord.Embed(title=f"You are no longer ignoring {str(user)}", description="All deleted and edited messages by this user will now be sent to your logging channel", color=Color.red())
         await ctx.reply(embed=embed)
-
-
+'''
+'''
     @commands.command(brief="Displays a list of all users being ignored", help="Displays a list of all users being ignored")
     async def ignoredusers(self, ctx):
         message = ""
@@ -197,15 +247,15 @@ class Logger(commands.Cog):
             if user:
                 message += f"\n{str(user)}"
         await ctx.send(f"```Users currently being ignored: {message}```")
-
-
+'''
+'''
     @commands.command()
     async def setlogchannel(self, ctx):
         self.bot.config.log_channel = ctx.channel.id
         self.log_channel = ctx.channel
         embed = discord.Embed(title="Your logger is setup! All deleted and edited messages will now be sent here", color=Color.red())
         await ctx.reply(embed=embed)
-
+'''
 
 def setup(bot):
     bot.add_cog(Logger(bot))
